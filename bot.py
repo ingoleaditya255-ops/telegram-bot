@@ -42,8 +42,9 @@ HEADERS = {
 
 MOTIVATIONAL_MESSAGE = (
     "Every PYQ you solve = one step closer to your target rank. Don't stop the momentum now 💪\n\n"
-    "👉 Press /start to solve more PYQs and keep the streak alive.\n\n"
-    "/feedback if want to report a bug or problem with bot."
+    "👉 Press /start to solve more PYQs and keep the streak 🔥 alive.\n\n"
+    "/feedback if want to report a bug or problem with bot.\n\n"
+    "/share please share the bot to more med students to keep this bot alive." 
 )
 
 # ================= USER STORAGE =================
@@ -487,16 +488,55 @@ async def end_faceoff(match_id, context):
     )
 
 
+# ================= SHARE =================
+async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    
+    # Send notification to admin when /share command is used
+    try:
+        await context.bot.send_message(
+            chat_id=ADMIN_ID,
+            text=f"📤 /share Command Used!\n\n"
+                 f"👤 User: {user.first_name} (@{user.username or 'No username'})\n"
+                 f"🆔 User ID: {user.id}"
+        )
+    except:
+        pass
+    
+    share_text = (
+        "🏥 *MedRoyale Bot* 🏥\n\n"
+        "📚 The ultimate NEET PYQ practice bot!\n\n"
+        "✨ *Features:*\n"
+        "• 🧠 Self Practice Mode - Quiz yourself\n"
+        "• ⚔️ Face-Off Mode - Challenge friends\n"
+        "• 📖 All years (1st to Final)\n"
+        "• 🎯 Subject-wise practice\n"
+        "• ⏱️ Timed questions\n"
+        "• 📊 Track your progress\n\n"
+        "🚀 Start practicing now: @Medroyalebot\n\n"
+        "💪 Master NEET PYQs one question at a time!"
+    )
+    
+    # Share button with inline query (opens share window)
+    keyboard = [[
+        InlineKeyboardButton("🤖 Try the Bot", url="https://t.me/Medroyalebot"),
+        InlineKeyboardButton("📤 Share", switch_inline_query=share_text)
+    ]]
+    
+    await update.message.reply_text(
+        share_text,
+        parse_mode="Markdown",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
 # ================= BROADCAST =================
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     
-    # Only admin can broadcast
     if user_id != ADMIN_ID:
         await update.message.reply_text("⛔ You are not authorized to use this command.")
         return
     
-    # Check if message text is provided
     if not context.args:
         await update.message.reply_text(
             "❌ Please provide a message to broadcast.\n\n"
@@ -506,7 +546,10 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     broadcast_message = " ".join(context.args)
     
-    # Get all users from database
+    # Generate unique broadcast ID
+    import time
+    broadcast_id = f"bc_{int(time.time())}"
+    
     try:
         response = requests.get(
             f"{USERS_TABLE_URL}?select=user_id",
@@ -523,7 +566,6 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ No users found in database.")
         return
     
-    # Send broadcast message
     success_count = 0
     fail_count = 0
     
@@ -532,18 +574,21 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Progress: 0/{len(users)}"
     )
     
+    # Add acknowledgment button
+    keyboard = [[InlineKeyboardButton("✅ Got it!", callback_data=f"ack_{broadcast_id}")]]
+    
     for idx, user in enumerate(users):
         try:
             await context.bot.send_message(
                 chat_id=user["user_id"],
                 text=f"📢 *Broadcast Message*\n\n{broadcast_message}",
-                parse_mode="Markdown"
+                parse_mode="Markdown",
+                reply_markup=InlineKeyboardMarkup(keyboard)
             )
             success_count += 1
         except Exception:
             fail_count += 1
         
-        # Update progress every 10 users
         if (idx + 1) % 10 == 0 or (idx + 1) == len(users):
             try:
                 await status_msg.edit_text(
@@ -555,21 +600,64 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except:
                 pass
     
-    # Final summary
     await status_msg.edit_text(
         f"✅ Broadcast Complete!\n\n"
         f"Total Users: {len(users)}\n"
         f"✅ Successfully Sent: {success_count}\n"
-        f"❌ Failed: {fail_count}"
+        f"❌ Failed: {fail_count}\n\n"
+        f"📊 Tracking ID: `{broadcast_id}`\n"
+        f"Use /broadcast_stats {broadcast_id} to see who acknowledged"
     )
 
+
+# Handler for acknowledgment button
+async def broadcast_ack_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer("✅ Thanks for acknowledging!")
+    
+    user = query.from_user
+    broadcast_id = query.data.split("_", 1)[1]
+    
+    # Notify admin
+    try:
+        await context.bot.send_message(
+            chat_id=ADMIN_ID,
+            text=f"✅ Broadcast Acknowledged!\n\n"
+                 f"📋 ID: {broadcast_id}\n"
+                 f"👤 User: {user.first_name} (@{user.username or 'No username'})\n"
+                 f"🆔 User ID: {user.id}"
+        )
+    except:
+        pass
+    
+    # Optional: Remove the button after clicking
+    await query.edit_message_reply_markup(reply_markup=None)
+    
+async def share_tracking_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    
+    user = query.from_user
+    
+    # Send notification to admin
+    try:
+        await context.bot.send_message(
+            chat_id=ADMIN_ID,
+            text=f"📤 Share Button Clicked!\n\n"
+                 f"👤 User: {user.first_name} (@{user.username or 'No username'})\n"
+                 f"🆔 User ID: {user.id}"
+        )
+    except:
+        pass
 
 # ================= MAIN =================
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
-
+    
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("share", share))
     app.add_handler(CommandHandler("broadcast", broadcast))
+    app.add_handler(CallbackQueryHandler(broadcast_ack_handler, pattern="^ack_"))
     app.add_handler(CallbackQueryHandler(faceoff_answer_handler, pattern="^fo_"))
     app.add_handler(CallbackQueryHandler(self_answer_handler, pattern="^self_"))
     app.add_handler(CallbackQueryHandler(subject_handler))

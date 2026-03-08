@@ -45,10 +45,16 @@ MOTIVATIONAL_MESSAGE = (
     "👉 Press /start to solve more PYQs and keep the streak 🔥 alive.\n\n"
     "/feedback if want to report a bug or problem with bot.\n\n"
     "/share please share the bot to more med students to keep this bot alive.\n\n"
-    "━━━━━━━━━━━━━━━━━━━━\n"
-    "📸 Follow my instagram for daily questions, notes & quizzes with prizes 🎁\n"
-    "👉 @pyrexiamed on Instagram\n"
-    "🔗 https://www.instagram.com/pyrexiamed"
+) 
+
+INSTAGRAM_MESSAGE = (
+    "🌟 Want more? We've got you covered!\n\n"
+    "📲 Follow *@pyrexiamed* on Instagram for:\n"
+    "• 📝 Daily PYQs & Notes\n"
+    "• 🧠 Quizzes with Prizes 🎁\n"
+    "• 🔥 Exclusive Study Material\n\n"
+    "👉 https://www.instagram.com/pyrexiamed\n\n"
+    "Join the community & level up your prep! 🚀"
 )
 
 # ================= USER STORAGE =================
@@ -238,6 +244,7 @@ async def send_self_question(chat_id, context):
             f"🎉 Quiz Finished!\nScore: {context.user_data['score']} / {len(questions)}\n\n"
             f"{MOTIVATIONAL_MESSAGE}"
         )
+        await context.bot.send_message(chat_id, INSTAGRAM_MESSAGE, parse_mode="Markdown")
         context.user_data.clear()
         return
 
@@ -486,11 +493,13 @@ async def end_faceoff(match_id, context):
         p1["chat_id"],
         f"{m1}\nScore: {p1['score']} – {p2['score']}\n\n{MOTIVATIONAL_MESSAGE}"
     )
+    await context.bot.send_message(p1["chat_id"], INSTAGRAM_MESSAGE, parse_mode="Markdown")
+    
     await context.bot.send_message(
         p2["chat_id"],
         f"{m2}\nScore: {p2['score']} – {p1['score']}\n\n{MOTIVATIONAL_MESSAGE}"
     )
-
+    await context.bot.send_message(p2["chat_id"], INSTAGRAM_MESSAGE, parse_mode="Markdown")
 
 # ================= SHARE =================
 async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):

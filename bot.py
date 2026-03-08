@@ -44,7 +44,11 @@ MOTIVATIONAL_MESSAGE = (
     "Every PYQ you solve = one step closer to your target rank. Don't stop the momentum now 💪\n\n"
     "👉 Press /start to solve more PYQs and keep the streak 🔥 alive.\n\n"
     "/feedback if want to report a bug or problem with bot.\n\n"
-    "/share please share the bot to more med students to keep this bot alive." 
+    "/share please share the bot to more med students to keep this bot alive.\n\n"
+    "━━━━━━━━━━━━━━━━━━━━\n"
+    "📸 Follow my instagram for daily questions, notes & quizzes with prizes 🎁\n"
+    "👉 @pyrexiamed on Instagram\n"
+    "🔗 https://www.instagram.com/pyrexiamed"
 )
 
 # ================= USER STORAGE =================
